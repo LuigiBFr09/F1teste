@@ -1,0 +1,1882 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>F1 TRACK GENERATOR</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
+
+  :root {
+    --red: #E10600;
+    --red-dark: #9B0500;
+    --yellow: #FFD700;
+    --bg: #0A0A0C;
+    --surface: #111116;
+    --surface2: #1A1A22;
+    --border: #2A2A35;
+    --text: #E8E8F0;
+    --text-muted: #6A6A80;
+    --green: #00FF88;
+    --track-color: #E10600;
+    --track-outline: #FFD700;
+    --asphalt: #1C1C24;
+    --curb-red: #CC0000;
+    --curb-white: #EEEEEE;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* GRID BACKGROUND */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(225,6,0,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(225,6,0,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* TOP BAR */
+  .topbar {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 32px;
+    height: 64px;
+    background: var(--surface);
+    border-bottom: 2px solid var(--red);
+    box-shadow: 0 0 40px rgba(225,6,0,0.2);
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .logo-flag {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .logo-flag span {
+    display: block;
+    width: 28px;
+    height: 8px;
+    background: repeating-linear-gradient(
+      90deg,
+      #000 0, #000 8px,
+      #fff 8px, #fff 16px
+    );
+  }
+
+  .logo-flag span:nth-child(2) {
+    background: repeating-linear-gradient(
+      90deg,
+      #fff 0, #fff 8px,
+      #000 8px, #000 16px
+    );
+  }
+
+  .logo h1 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 18px;
+    font-weight: 900;
+    letter-spacing: 4px;
+    color: #fff;
+  }
+
+  .logo h1 span { color: var(--red); }
+
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 8px var(--green);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* MAIN LAYOUT */
+  .main {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    height: calc(100vh - 64px);
+  }
+
+  /* LEFT PANEL */
+  .panel {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .panel::-webkit-scrollbar { width: 4px; }
+  .panel::-webkit-scrollbar-track { background: var(--bg); }
+  .panel::-webkit-scrollbar-thumb { background: var(--red); border-radius: 2px; }
+
+  .panel-section {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-label {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: var(--red);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--border), transparent);
+  }
+
+  /* INPUT AREA */
+  .input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .input-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .input-wrap {
+    position: relative;
+  }
+
+  .input-wrap textarea {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    padding: 12px;
+    resize: vertical;
+    min-height: 100px;
+    transition: border-color 0.2s;
+    line-height: 1.6;
+  }
+
+  .input-wrap textarea:focus {
+    outline: none;
+    border-color: var(--red);
+    box-shadow: 0 0 0 2px rgba(225,6,0,0.1);
+  }
+
+  .input-wrap textarea::placeholder { color: var(--text-muted); }
+
+  /* HINTS */
+  .hint-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--yellow);
+    border-radius: 4px;
+    padding: 12px;
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  .hint-box strong { color: var(--yellow); }
+
+  .hint-steps {
+    list-style: none;
+    counter-reset: step;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .hint-steps li {
+    counter-increment: step;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .hint-steps li::before {
+    content: counter(step);
+    background: var(--red);
+    color: #fff;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  /* STYLE OPTIONS */
+  .style-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .style-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-muted);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .style-btn:hover {
+    border-color: var(--red);
+    color: var(--text);
+  }
+
+  .style-btn.active {
+    border-color: var(--red);
+    background: rgba(225,6,0,0.1);
+    color: #fff;
+  }
+
+  .style-btn .dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* SLIDERS */
+  .slider-row {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .slider-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .slider-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .slider-name {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .slider-val {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px;
+    color: var(--red);
+  }
+
+  input[type=range] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    outline: none;
+  }
+
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--red);
+    cursor: pointer;
+    box-shadow: 0 0 6px rgba(225,6,0,0.5);
+  }
+
+  /* ACTION BUTTON */
+  .btn-generate {
+    width: 100%;
+    background: var(--red);
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 16px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .btn-generate::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%);
+    transform: translateX(-100%);
+    transition: transform 0.4s;
+  }
+
+  .btn-generate:hover::before { transform: translateX(100%); }
+  .btn-generate:hover { background: #FF1400; box-shadow: 0 0 30px rgba(225,6,0,0.5); }
+  .btn-generate:active { transform: scale(0.98); }
+  .btn-generate:disabled { background: #333; color: #666; cursor: not-allowed; }
+
+  .btn-generate .icon { font-size: 18px; }
+
+  /* EXPORT BUTTONS */
+  .export-row {
+    display: flex;
+    gap: 8px;
+  }
+
+  .btn-export {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 10px;
+    color: var(--text-muted);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .btn-export:hover {
+    border-color: var(--yellow);
+    color: var(--yellow);
+  }
+
+  /* STATS */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .stat-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 12px;
+  }
+
+  .stat-label {
+    font-size: 9px;
+    color: var(--text-muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .stat-value {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .stat-value span {
+    font-size: 10px;
+    color: var(--text-muted);
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 400;
+  }
+
+  /* RIGHT - CANVAS AREA */
+  .canvas-area {
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .canvas-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    z-index: 5;
+  }
+
+  .circuit-name-display {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--text);
+  }
+
+  .circuit-name-display span {
+    color: var(--red);
+  }
+
+  .toolbar-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .tool-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 6px 12px;
+    color: var(--text-muted);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .tool-btn:hover {
+    border-color: var(--red);
+    color: var(--text);
+  }
+
+  .canvas-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 30px;
+    position: relative;
+  }
+
+  canvas#trackCanvas {
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 8px;
+  }
+
+  /* EMPTY STATE */
+  .empty-state {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    color: var(--text-muted);
+    pointer-events: none;
+  }
+
+  .empty-icon {
+    font-size: 64px;
+    opacity: 0.3;
+    animation: float 3s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  .empty-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 16px;
+    letter-spacing: 3px;
+    opacity: 0.4;
+  }
+
+  .empty-sub {
+    font-size: 13px;
+    opacity: 0.3;
+    text-align: center;
+    max-width: 300px;
+    line-height: 1.6;
+  }
+
+  /* LOADING */
+  .loading-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(10,10,12,0.9);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 20px;
+    z-index: 20;
+    backdrop-filter: blur(4px);
+  }
+
+  .loading-overlay.active { display: flex; }
+
+  .loader-track {
+    position: relative;
+    width: 120px;
+    height: 60px;
+  }
+
+  .loader-car {
+    position: absolute;
+    font-size: 24px;
+    animation: race 1.5s linear infinite;
+  }
+
+  @keyframes race {
+    0% { left: -30px; top: 18px; }
+    50% { left: 50px; top: 0; }
+    100% { left: 120px; top: 18px; }
+  }
+
+  .loader-line {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--border);
+    overflow: hidden;
+  }
+
+  .loader-line::after {
+    content: '';
+    position: absolute;
+    left: -50%;
+    top: 0;
+    height: 100%;
+    width: 50%;
+    background: linear-gradient(90deg, transparent, var(--red), transparent);
+    animation: slide 1s linear infinite;
+  }
+
+  @keyframes slide {
+    to { left: 150%; }
+  }
+
+  .loader-text {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--red);
+    animation: blink 1s step-end infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--green);
+    border-radius: 4px;
+    padding: 14px 20px;
+    font-size: 13px;
+    font-family: 'Share Tech Mono', monospace;
+    color: var(--text);
+    z-index: 100;
+    transform: translateX(150%);
+    transition: transform 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .toast.show { transform: translateX(0); }
+  .toast.error { border-left-color: var(--red); }
+
+  /* CORNER DECORATIONS */
+  .corner {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-color: var(--red);
+    border-style: solid;
+    opacity: 0.4;
+  }
+
+  .corner.tl { top: 60px; left: 380px; border-width: 1px 0 0 1px; }
+  .corner.tr { top: 60px; right: 0; border-width: 1px 1px 0 0; }
+  .corner.bl { bottom: 0; left: 380px; border-width: 0 0 1px 1px; }
+  .corner.br { bottom: 0; right: 0; border-width: 0 1px 1px 0; }
+
+  /* F1 INSPIRED SIDE STRIPE */
+  .side-stripe {
+    position: absolute;
+    top: 64px;
+    left: 380px;
+    width: 4px;
+    height: 100%;
+    background: repeating-linear-gradient(
+      180deg,
+      var(--red) 0, var(--red) 20px,
+      transparent 20px, transparent 40px
+    );
+    opacity: 0.15;
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 900px) {
+    .main {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto 1fr;
+      height: auto;
+    }
+
+    .panel {
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .canvas-area {
+      min-height: 60vh;
+    }
+
+    .side-stripe { display: none; }
+    .corner { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<header class="topbar">
+  <div class="logo">
+    <div class="logo-flag">
+      <span></span><span></span><span></span>
+    </div>
+    <h1>F1 <span>TRACK</span> GENERATOR</h1>
+  </div>
+  <div class="topbar-right">
+    <div class="status-dot"></div>
+    <span>SISTEMA ONLINE</span>
+    <span style="color: var(--border)">|</span>
+    <span id="clock">--:--:--</span>
+  </div>
+</header>
+
+<div class="side-stripe"></div>
+<div class="corner tl"></div>
+<div class="corner tr"></div>
+<div class="corner bl"></div>
+<div class="corner br"></div>
+
+<div class="main">
+
+  <!-- LEFT PANEL -->
+  <aside class="panel">
+
+    <!-- ROUTE INPUT -->
+    <div class="panel-section">
+      <div class="section-label">🗺 Rota de Entrada</div>
+      <div class="input-group">
+        <div class="input-label">Cole o URL ou coordenadas do Google Maps</div>
+        <div class="input-wrap">
+          <textarea id="routeInput" placeholder="Cole aqui:
+• URL do Google Maps
+• Coordenadas (lat,lng pares)
+• Ou o nome do circuito
+
+Ex: -23.703,-46.697 → -23.700,-46.690 → ..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- INSTRUCTIONS -->
+    <div class="panel-section">
+      <div class="section-label">📋 Como usar</div>
+      <div class="hint-box">
+        <strong>Como obter coordenadas do Google Maps:</strong>
+        <ol class="hint-steps">
+          <li>Abra o Google Maps e trace uma rota</li>
+          <li>Clique com botão direito em vários pontos da rota</li>
+          <li>Selecione "O que há aqui?" para copiar lat/lng</li>
+          <li>Cole os pares de coordenadas abaixo separados por vírgula</li>
+          <li>Ou cole diretamente a URL do Maps</li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- CIRCUIT NAME -->
+    <div class="panel-section">
+      <div class="section-label">🏁 Nome do Circuito</div>
+      <div class="input-group">
+        <input type="text" id="circuitName" placeholder="Ex: CIRCUIT DE MONACO"
+          style="background: var(--surface2); border: 1px solid var(--border); border-radius: 4px;
+          color: var(--text); font-family: 'Orbitron', sans-serif; font-size: 11px;
+          padding: 12px; width: 100%; letter-spacing: 2px;"
+          value="MEU CIRCUITO">
+      </div>
+    </div>
+
+    <!-- STYLE OPTIONS -->
+    <div class="panel-section">
+      <div class="section-label">🎨 Estilo Visual</div>
+      <div class="style-grid">
+        <button class="style-btn active" data-style="dark" onclick="setStyle(this)">
+          <span class="dot" style="background:#E10600"></span> Dark F1
+        </button>
+        <button class="style-btn" data-style="night" onclick="setStyle(this)">
+          <span class="dot" style="background:#0066FF"></span> Night Race
+        </button>
+        <button class="style-btn" data-style="desert" onclick="setStyle(this)">
+          <span class="dot" style="background:#C8A855"></span> Desert GP
+        </button>
+        <button class="style-btn" data-style="monaco" onclick="setStyle(this)">
+          <span class="dot" style="background:#00CC66"></span> Monaco
+        </button>
+      </div>
+    </div>
+
+    <!-- SLIDERS -->
+    <div class="panel-section">
+      <div class="section-label">⚙ Configurações</div>
+      <div class="slider-row">
+        <div class="slider-item">
+          <div class="slider-header">
+            <span class="slider-name">Largura da pista</span>
+            <span class="slider-val" id="widthVal">18</span>
+          </div>
+          <input type="range" min="8" max="40" value="18" id="trackWidth" oninput="updateSlider('widthVal', this.value); renderTrack()">
+        </div>
+        <div class="slider-item">
+          <div class="slider-header">
+            <span class="slider-name">Suavização</span>
+            <span class="slider-val" id="smoothVal">5</span>
+          </div>
+          <input type="range" min="1" max="10" value="5" id="smoothing" oninput="updateSlider('smoothVal', this.value); renderTrack()">
+        </div>
+        <div class="slider-item">
+          <div class="slider-header">
+            <span class="slider-name">Escala</span>
+            <span class="slider-val" id="scaleVal">1.0</span>
+          </div>
+          <input type="range" min="5" max="20" value="10" id="scale" oninput="updateSlider('scaleVal', (this.value/10).toFixed(1)); renderTrack()">
+        </div>
+        <div class="slider-item">
+          <div class="slider-header">
+            <span class="slider-name">Rotação</span>
+            <span class="slider-val" id="rotateVal">0°</span>
+          </div>
+          <input type="range" min="0" max="360" value="0" id="rotation" oninput="updateSlider('rotateVal', this.value+'°'); renderTrack()">
+        </div>
+      </div>
+    </div>
+
+    <!-- CHECKBOXES -->
+    <div class="panel-section">
+      <div class="section-label">🔧 Elementos</div>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <label class="toggle-row" style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+          <input type="checkbox" id="showCurbs" checked onchange="renderTrack()" style="accent-color:var(--red)">
+          <span style="font-size:13px;">Meio-fio (Curbs)</span>
+        </label>
+        <label class="toggle-row" style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+          <input type="checkbox" id="showStartLine" checked onchange="renderTrack()" style="accent-color:var(--red)">
+          <span style="font-size:13px;">Linha de largada</span>
+        </label>
+        <label class="toggle-row" style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+          <input type="checkbox" id="showDirection" checked onchange="renderTrack()" style="accent-color:var(--red)">
+          <span style="font-size:13px;">Direção de corrida</span>
+        </label>
+        <label class="toggle-row" style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+          <input type="checkbox" id="showDRS" onchange="renderTrack()" style="accent-color:var(--red)">
+          <span style="font-size:13px;">Zonas de DRS</span>
+        </label>
+        <label class="toggle-row" style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+          <input type="checkbox" id="showSectors" onchange="renderTrack()" style="accent-color:var(--red)">
+          <span style="font-size:13px;">Setores (1, 2, 3)</span>
+        </label>
+        <label class="toggle-row" style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+          <input type="checkbox" id="showTurnNumbers" onchange="renderTrack()" style="accent-color:var(--red)">
+          <span style="font-size:13px;">Número das curvas</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- GENERATE -->
+    <div class="panel-section">
+      <button class="btn-generate" onclick="processRoute()">
+        <span class="icon">🏎</span> GERAR TRAÇADO
+      </button>
+    </div>
+
+    <!-- STATS -->
+    <div class="panel-section" id="statsSection" style="display:none">
+      <div class="section-label">📊 Dados do Circuito</div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Comprimento</div>
+          <div class="stat-value" id="statLength">--<span> km</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Curvas</div>
+          <div class="stat-value" id="statTurns">--</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Pontos</div>
+          <div class="stat-value" id="statPoints">--</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Estilo</div>
+          <div class="stat-value" id="statStyle" style="font-size:12px">--</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EXPORT -->
+    <div class="panel-section">
+      <div class="section-label">💾 Exportar</div>
+      <div class="export-row">
+        <button class="btn-export" onclick="exportPNG()">
+          🖼 PNG
+        </button>
+        <button class="btn-export" onclick="exportSVG()">
+          📐 SVG
+        </button>
+        <button class="btn-export" onclick="copyImage()">
+          📋 COPIAR
+        </button>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- CANVAS AREA -->
+  <div class="canvas-area">
+    <div class="canvas-toolbar">
+      <div class="circuit-name-display">
+        <span id="displayName">---</span> GRAND PRIX
+      </div>
+      <div class="toolbar-actions">
+        <button class="tool-btn" onclick="resetView()">↺ RESET</button>
+        <button class="tool-btn" onclick="zoomIn()">＋ ZOOM</button>
+        <button class="tool-btn" onclick="zoomOut()">－ ZOOM</button>
+        <button class="tool-btn" onclick="loadExample()">⚡ EXEMPLO</button>
+      </div>
+    </div>
+    <div class="canvas-wrap">
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">🏎</div>
+        <div class="empty-title">AGUARDANDO ROTA</div>
+        <div class="empty-sub">Cole coordenadas ou URL do Google Maps e clique em "Gerar Traçado"</div>
+      </div>
+      <canvas id="trackCanvas" width="900" height="700"></canvas>
+    </div>
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="loader-track">
+        <div class="loader-car">🏎</div>
+        <div class="loader-line"></div>
+      </div>
+      <div class="loader-text">PROCESSANDO ROTA...</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <span id="toastIcon">✓</span>
+  <span id="toastMsg">Traçado gerado com sucesso!</span>
+</div>
+
+<script>
+// ======================================================
+// STATE
+// ======================================================
+let currentPoints = [];
+let currentStyle = 'dark';
+let zoomLevel = 1;
+
+const STYLES = {
+  dark: {
+    bg: '#0D0D10',
+    bgGrad: ['#0D0D10', '#141418'],
+    asphalt: '#1C1C24',
+    asphaltEdge: '#252530',
+    trackLine: '#CCCCDD',
+    trackLineDash: [20, 15],
+    outline: '#444455',
+    curb1: '#CC0000',
+    curb2: '#EEEEEE',
+    drs: '#00FF88',
+    sector1: '#FF3333',
+    sector2: '#FFAA00',
+    sector3: '#00BBFF',
+    text: '#FFFFFF',
+    textSub: '#888899',
+    accent: '#E10600',
+    accentGlow: 'rgba(225,6,0,0.4)',
+    startLine: '#FFD700',
+    grid: 'rgba(255,255,255,0.03)',
+    name: 'DARK F1'
+  },
+  night: {
+    bg: '#020510',
+    bgGrad: ['#020510', '#050A20'],
+    asphalt: '#0D1230',
+    asphaltEdge: '#101840',
+    trackLine: '#8899FF',
+    trackLineDash: [20, 15],
+    outline: '#2233AA',
+    curb1: '#0066FF',
+    curb2: '#FFFFFF',
+    drs: '#00FFCC',
+    sector1: '#FF4466',
+    sector2: '#FFAA00',
+    sector3: '#44AAFF',
+    text: '#EEEEFF',
+    textSub: '#6677AA',
+    accent: '#0066FF',
+    accentGlow: 'rgba(0,102,255,0.5)',
+    startLine: '#00FFCC',
+    grid: 'rgba(100,150,255,0.04)',
+    name: 'NIGHT RACE'
+  },
+  desert: {
+    bg: '#1A1208',
+    bgGrad: ['#1A1208', '#221A0A'],
+    asphalt: '#2C2010',
+    asphaltEdge: '#382A18',
+    trackLine: '#DDB055',
+    trackLineDash: [20, 15],
+    outline: '#6B4A18',
+    curb1: '#CC8800',
+    curb2: '#F5E8C0',
+    drs: '#FFCC00',
+    sector1: '#FF6600',
+    sector2: '#FFCC00',
+    sector3: '#AAAAAA',
+    text: '#F5E8C0',
+    textSub: '#886644',
+    accent: '#CC8800',
+    accentGlow: 'rgba(200,136,0,0.4)',
+    startLine: '#FF6600',
+    grid: 'rgba(200,160,80,0.05)',
+    name: 'DESERT GP'
+  },
+  monaco: {
+    bg: '#061208',
+    bgGrad: ['#061208', '#0A1E0C'],
+    asphalt: '#101E12',
+    asphaltEdge: '#162418',
+    trackLine: '#66EE88',
+    trackLineDash: [20, 15],
+    outline: '#1A4420',
+    curb1: '#FF0000',
+    curb2: '#FFFFFF',
+    drs: '#00FF88',
+    sector1: '#FF4444',
+    sector2: '#FFFF00',
+    sector3: '#44FFAA',
+    text: '#EEFFF0',
+    textSub: '#447744',
+    accent: '#00CC44',
+    accentGlow: 'rgba(0,204,68,0.4)',
+    startLine: '#FFEE00',
+    grid: 'rgba(0,255,100,0.03)',
+    name: 'MONACO'
+  }
+};
+
+// ======================================================
+// CLOCK
+// ======================================================
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent =
+    now.toTimeString().slice(0,8);
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ======================================================
+// STYLE SELECTOR
+// ======================================================
+function setStyle(btn) {
+  document.querySelectorAll('.style-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentStyle = btn.dataset.style;
+  if (currentPoints.length > 0) renderTrack();
+}
+
+// ======================================================
+// SLIDER
+// ======================================================
+function updateSlider(id, val) {
+  document.getElementById(id).textContent = val;
+}
+
+// ======================================================
+// PARSE INPUT
+// ======================================================
+function parseInput(input) {
+  let points = [];
+  input = input.trim();
+
+  // Try URL parsing (extract @lat,lng or ?q=lat,lng)
+  if (input.includes('google.com/maps')) {
+    const atMatch = input.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+    if (atMatch) {
+      // Extract waypoints from URL
+      const waypointMatches = [...input.matchAll(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/g)];
+      if (waypointMatches.length > 0) {
+        waypointMatches.forEach(m => points.push([parseFloat(m[1]), parseFloat(m[2])]));
+      } else {
+        // Just use center + simulate a route
+        const lat = parseFloat(atMatch[1]);
+        const lng = parseFloat(atMatch[2]);
+        points = generateCircuitFromCenter(lat, lng);
+      }
+    }
+    return points;
+  }
+
+  // Try coordinate pairs (various formats)
+  // Format: lat,lng\nlat,lng or lat,lng;lat,lng or (lat,lng),(lat,lng)
+  const cleanInput = input.replace(/[()[\]]/g, '').replace(/;/g, '\n');
+  const lines = cleanInput.split(/[\n,→\->]+/).map(s => s.trim()).filter(Boolean);
+
+  // Try to extract coordinate pairs
+  const coordPattern = /^(-?\d+\.?\d*)\s*[,\s]\s*(-?\d+\.?\d*)$/;
+
+  for (let i = 0; i < lines.length - 1; i += 2) {
+    const pair = lines[i] + ',' + lines[i+1];
+    const m = pair.match(/(-?\d+\.?\d+)[,\s]+(-?\d+\.?\d+)/);
+    if (m) {
+      const lat = parseFloat(m[1]);
+      const lng = parseFloat(m[2]);
+      if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+        points.push([lat, lng]);
+      }
+    }
+  }
+
+  // If nothing found, try inline format: -23.5,-46.6 -23.4,-46.5
+  if (points.length === 0) {
+    const inlineMatches = [...input.matchAll(/(-?\d+\.?\d+)\s*,\s*(-?\d+\.?\d+)/g)];
+    inlineMatches.forEach(m => {
+      const lat = parseFloat(m[1]);
+      const lng = parseFloat(m[2]);
+      if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+        points.push([lat, lng]);
+      }
+    });
+  }
+
+  return points;
+}
+
+function generateCircuitFromCenter(lat, lng) {
+  // Generate a plausible F1-style circuit around center point
+  const pts = [];
+  const r = 0.005;
+  const corners = [
+    [lat + r*0.8, lng - r*1.2],
+    [lat + r*1.0, lng - r*0.5],
+    [lat + r*1.0, lng + r*0.3],
+    [lat + r*0.8, lng + r*1.0],
+    [lat + r*0.3, lng + r*1.2],
+    [lat - r*0.2, lng + r*1.0],
+    [lat - r*0.6, lng + r*0.8],
+    [lat - r*1.0, lng + r*0.4],
+    [lat - r*1.0, lng - r*0.2],
+    [lat - r*0.8, lng - r*0.8],
+    [lat - r*0.3, lng - r*1.2],
+    [lat + r*0.3, lng - r*1.2],
+  ];
+  return corners;
+}
+
+// ======================================================
+// PROCESS ROUTE
+// ======================================================
+function processRoute() {
+  const input = document.getElementById('routeInput').value;
+
+  if (!input.trim()) {
+    showToast('Cole uma rota ou coordenadas!', true);
+    return;
+  }
+
+  showLoading(true);
+
+  setTimeout(() => {
+    const points = parseInput(input);
+
+    if (points.length < 3) {
+      showLoading(false);
+      showToast('Não foi possível extrair coordenadas. Tente o formato: lat,lng em linhas separadas.', true);
+      return;
+    }
+
+    currentPoints = points;
+    renderTrack();
+    updateStats(points);
+    document.getElementById('emptyState').style.display = 'none';
+    document.getElementById('statsSection').style.display = 'block';
+
+    showLoading(false);
+    showToast(`Traçado gerado com ${points.length} pontos!`);
+  }, 800);
+}
+
+// ======================================================
+// RENDER TRACK
+// ======================================================
+function renderTrack() {
+  if (currentPoints.length < 2) return;
+
+  const canvas = document.getElementById('trackCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  const st = STYLES[currentStyle];
+  const trackWidth = parseInt(document.getElementById('trackWidth').value);
+  const smoothing = parseInt(document.getElementById('smoothing').value);
+  const scale = parseFloat(document.getElementById('scale').value) / 10;
+  const rotation = parseInt(document.getElementById('rotation').value) * Math.PI / 180;
+  const showCurbs = document.getElementById('showCurbs').checked;
+  const showStartLine = document.getElementById('showStartLine').checked;
+  const showDirection = document.getElementById('showDirection').checked;
+  const showDRS = document.getElementById('showDRS').checked;
+  const showSectors = document.getElementById('showSectors').checked;
+  const showTurns = document.getElementById('showTurnNumbers').checked;
+
+  // Update display name
+  const name = document.getElementById('circuitName').value || 'MEU CIRCUITO';
+  document.getElementById('displayName').textContent = name;
+
+  // ---- BACKGROUND ----
+  ctx.clearRect(0, 0, W, H);
+
+  const bgGrad = ctx.createLinearGradient(0, 0, W, H);
+  bgGrad.addColorStop(0, st.bgGrad[0]);
+  bgGrad.addColorStop(1, st.bgGrad[1]);
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, W, H);
+
+  // Grid
+  ctx.strokeStyle = st.grid;
+  ctx.lineWidth = 1;
+  for (let x = 0; x < W; x += 40) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+  }
+  for (let y = 0; y < H; y += 40) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+  }
+
+  // ---- PROJECT COORDINATES ----
+  let pts = projectCoords(currentPoints, W, H, scale, rotation, smoothing);
+
+  if (pts.length < 2) return;
+
+  // ---- DRAW TRACK SHADOW ----
+  ctx.save();
+  ctx.shadowColor = st.accentGlow;
+  ctx.shadowBlur = 30;
+  drawTrackOutline(ctx, pts, trackWidth + 16, 'rgba(0,0,0,0.6)', true);
+  ctx.restore();
+
+  // ---- OUTER BORDER ----
+  drawTrackOutline(ctx, pts, trackWidth + 8, st.outline, true);
+
+  // ---- ASPHALT ----
+  drawTrackOutline(ctx, pts, trackWidth, st.asphalt, true);
+
+  // ---- EDGE LINES ----
+  drawTrackEdge(ctx, pts, trackWidth, st.asphaltEdge);
+
+  // ---- CURBS ----
+  if (showCurbs) {
+    drawCurbs(ctx, pts, trackWidth, st.curb1, st.curb2);
+  }
+
+  // ---- DRS ZONES ----
+  if (showDRS) {
+    drawDRSZones(ctx, pts, trackWidth, st.drs);
+  }
+
+  // ---- SECTOR MARKERS ----
+  if (showSectors) {
+    drawSectors(ctx, pts, trackWidth, st);
+  }
+
+  // ---- CENTER LINE ----
+  drawCenterLine(ctx, pts, st.trackLine, st.trackLineDash);
+
+  // ---- START LINE ----
+  if (showStartLine) {
+    drawStartLine(ctx, pts, trackWidth, st.startLine);
+  }
+
+  // ---- DIRECTION ARROWS ----
+  if (showDirection) {
+    drawArrows(ctx, pts, st.trackLine);
+  }
+
+  // ---- TURN NUMBERS ----
+  if (showTurns) {
+    drawTurnNumbers(ctx, pts, st);
+  }
+
+  // ---- CIRCUIT NAME OVERLAY ----
+  drawCircuitInfo(ctx, W, H, name, st);
+}
+
+// ======================================================
+// PROJECT COORDINATES
+// ======================================================
+function projectCoords(points, W, H, scale, rotation, smoothFactor) {
+  if (points.length < 2) return [];
+
+  // Normalize
+  let lats = points.map(p => p[0]);
+  let lngs = points.map(p => p[1]);
+
+  const minLat = Math.min(...lats);
+  const maxLat = Math.max(...lats);
+  const minLng = Math.min(...lngs);
+  const maxLng = Math.max(...lngs);
+
+  const rangeX = maxLng - minLng || 0.001;
+  const rangeY = maxLat - minLat || 0.001;
+
+  const padding = 120;
+  const aw = (W - padding * 2) * scale;
+  const ah = (H - padding * 2) * scale;
+
+  let pts = points.map(p => {
+    const x = ((p[1] - minLng) / rangeX) * aw;
+    const y = (1 - (p[0] - minLat) / rangeY) * ah;
+    return [x, y];
+  });
+
+  // Rotate
+  if (rotation !== 0) {
+    const cx = aw / 2;
+    const cy = ah / 2;
+    pts = pts.map(([x, y]) => {
+      const dx = x - cx;
+      const dy = y - cy;
+      return [
+        cx + dx * Math.cos(rotation) - dy * Math.sin(rotation),
+        cy + dx * Math.sin(rotation) + dy * Math.cos(rotation)
+      ];
+    });
+  }
+
+  // Center
+  const ox = pts.map(p => p[0]);
+  const oy = pts.map(p => p[1]);
+  const offX = (W - (Math.max(...ox) + Math.min(...ox))) / 2;
+  const offY = (H - (Math.max(...oy) + Math.min(...oy))) / 2;
+  pts = pts.map(([x, y]) => [x + offX, y + offY]);
+
+  // Smooth (Catmull-Rom to bezier points)
+  const smooth = Math.max(1, smoothFactor);
+  pts = smoothPoints(pts, smooth * 3);
+
+  return pts;
+}
+
+function smoothPoints(pts, factor) {
+  if (pts.length < 3) return pts;
+  const result = [];
+  for (let i = 0; i < pts.length; i++) {
+    const p0 = pts[Math.max(0, i - 1)];
+    const p1 = pts[i];
+    const p2 = pts[Math.min(pts.length - 1, i + 1)];
+
+    for (let t = 0; t < 1; t += 1 / factor) {
+      const t2 = t * t;
+      const t3 = t2 * t;
+      result.push([
+        0.5 * ((2 * p1[0]) + (-p0[0] + p2[0]) * t + (2*p0[0] - 5*p1[0] + 4*p2[0] - p2[0]) * t2 + (-p0[0] + 3*p1[0] - 3*p2[0] + p2[0]) * t3),
+        0.5 * ((2 * p1[1]) + (-p0[1] + p2[1]) * t + (2*p0[1] - 5*p1[1] + 4*p2[1] - p2[1]) * t2 + (-p0[1] + 3*p1[1] - 3*p2[1] + p2[1]) * t3)
+      ]);
+    }
+  }
+  result.push(pts[pts.length - 1]);
+  return result;
+}
+
+// ======================================================
+// DRAW FUNCTIONS
+// ======================================================
+function buildPath(ctx, pts, closed) {
+  ctx.beginPath();
+  ctx.moveTo(pts[0][0], pts[0][1]);
+  for (let i = 1; i < pts.length; i++) {
+    ctx.lineTo(pts[i][0], pts[i][1]);
+  }
+  if (closed) ctx.closePath();
+}
+
+function drawTrackOutline(ctx, pts, width, color, closed) {
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = width;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  buildPath(ctx, pts, closed);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawTrackEdge(ctx, pts, trackWidth, color) {
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([4, 8]);
+  // Simulate outer edge by slightly shifting
+  buildPath(ctx, pts, true);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawCenterLine(ctx, pts, color, dash) {
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1;
+  ctx.setLineDash(dash);
+  ctx.globalAlpha = 0.3;
+  buildPath(ctx, pts, true);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawCurbs(ctx, pts, trackWidth, col1, col2) {
+  const curbWidth = trackWidth * 0.25;
+  const segLen = 12;
+
+  ctx.save();
+  ctx.lineWidth = curbWidth;
+  ctx.lineCap = 'butt';
+
+  for (let i = 1; i < pts.length; i++) {
+    const p0 = pts[i - 1];
+    const p1 = pts[i];
+    const dx = p1[0] - p0[0];
+    const dy = p1[1] - p0[1];
+    const len = Math.sqrt(dx * dx + dy * dy);
+    const nx = -dy / len;
+    const ny = dx / len;
+
+    const segs = Math.ceil(len / segLen);
+    for (let s = 0; s < segs; s++) {
+      const t0 = s / segs;
+      const t1 = (s + 1) / segs;
+      const x0 = p0[0] + dx * t0;
+      const y0 = p0[1] + dy * t0;
+      const x1 = p0[0] + dx * t1;
+      const y1 = p0[1] + dy * t1;
+
+      const isEven = s % 2 === 0;
+      const side = trackWidth / 2 + curbWidth / 2;
+
+      // Draw on both sides
+      for (const sign of [-1, 1]) {
+        ctx.strokeStyle = isEven !== (sign > 0) ? col1 : col2;
+        ctx.beginPath();
+        ctx.moveTo(x0 + nx * side * sign, y0 + ny * side * sign);
+        ctx.lineTo(x1 + nx * side * sign, y1 + ny * side * sign);
+        ctx.stroke();
+      }
+    }
+  }
+  ctx.restore();
+}
+
+function drawDRSZones(ctx, pts, trackWidth, color) {
+  const n = pts.length;
+  const zones = [
+    [Math.floor(n * 0.05), Math.floor(n * 0.2)],
+    [Math.floor(n * 0.55), Math.floor(n * 0.7)]
+  ];
+
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = trackWidth * 0.15;
+  ctx.globalAlpha = 0.6;
+
+  for (const [start, end] of zones) {
+    ctx.beginPath();
+    ctx.moveTo(pts[start][0], pts[start][1]);
+    for (let i = start + 1; i <= Math.min(end, n-1); i++) {
+      ctx.lineTo(pts[i][0], pts[i][1]);
+    }
+    ctx.stroke();
+
+    // DRS label
+    const mid = Math.floor((start + end) / 2);
+    if (mid < n) {
+      ctx.save();
+      ctx.globalAlpha = 0.8;
+      ctx.fillStyle = color;
+      ctx.font = 'bold 10px Orbitron, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('DRS', pts[mid][0], pts[mid][1] - 15);
+      ctx.restore();
+    }
+  }
+  ctx.restore();
+}
+
+function drawSectors(ctx, pts, trackWidth, st) {
+  const n = pts.length;
+  const sectorColors = [st.sector1, st.sector2, st.sector3];
+  const boundaries = [0, Math.floor(n/3), Math.floor(2*n/3), n-1];
+
+  ctx.save();
+  ctx.lineWidth = trackWidth * 0.12;
+  ctx.globalAlpha = 0.5;
+
+  for (let s = 0; s < 3; s++) {
+    ctx.strokeStyle = sectorColors[s];
+    ctx.beginPath();
+    ctx.moveTo(pts[boundaries[s]][0], pts[boundaries[s]][1]);
+    for (let i = boundaries[s] + 1; i <= boundaries[s+1]; i++) {
+      ctx.lineTo(pts[i][0], pts[i][1]);
+    }
+    ctx.stroke();
+  }
+
+  // Sector labels
+  ctx.globalAlpha = 1;
+  for (let s = 0; s < 3; s++) {
+    const mid = Math.floor((boundaries[s] + boundaries[s+1]) / 2);
+    if (mid < n) {
+      ctx.save();
+      ctx.fillStyle = sectorColors[s];
+      ctx.font = 'bold 11px Orbitron, monospace';
+      ctx.textAlign = 'center';
+      ctx.shadowColor = sectorColors[s];
+      ctx.shadowBlur = 8;
+      ctx.fillText(`S${s+1}`, pts[mid][0], pts[mid][1] - 20);
+      ctx.restore();
+    }
+  }
+
+  ctx.restore();
+}
+
+function drawStartLine(ctx, pts, trackWidth, color) {
+  const p0 = pts[0];
+  const p1 = pts[1] || pts[0];
+  const dx = p1[0] - p0[0];
+  const dy = p1[1] - p0[1];
+  const len = Math.sqrt(dx*dx + dy*dy) || 1;
+  const nx = -dy / len;
+  const ny = dx / len;
+  const hw = trackWidth / 2 + 4;
+
+  // Checkerboard start line
+  ctx.save();
+  const sqSize = 6;
+  const numSq = Math.floor(trackWidth / sqSize) + 2;
+
+  for (let i = -numSq; i <= numSq; i++) {
+    for (let j = -2; j <= 2; j++) {
+      const isWhite = (i + j) % 2 === 0;
+      ctx.fillStyle = isWhite ? '#FFFFFF' : '#000000';
+      const cx = p0[0] + nx * (i * sqSize);
+      const cy = p0[1] + ny * (i * sqSize);
+      ctx.save();
+      ctx.translate(cx, cy);
+      const angle = Math.atan2(dy, dx);
+      ctx.rotate(angle);
+      ctx.fillRect(-sqSize/2, j * sqSize - sqSize/2, sqSize, sqSize);
+      ctx.restore();
+    }
+  }
+
+  // Start/Finish text
+  ctx.fillStyle = color;
+  ctx.font = 'bold 10px Orbitron, monospace';
+  ctx.textAlign = 'center';
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 10;
+  ctx.fillText('START / FINISH', p0[0], p0[1] - hw - 8);
+  ctx.restore();
+}
+
+function drawArrows(ctx, pts, color) {
+  const step = Math.max(1, Math.floor(pts.length / 12));
+  ctx.save();
+  ctx.fillStyle = color;
+  ctx.globalAlpha = 0.5;
+
+  for (let i = step; i < pts.length - step; i += step) {
+    const p = pts[i];
+    const pn = pts[Math.min(i + 3, pts.length - 1)];
+    const angle = Math.atan2(pn[1] - p[1], pn[0] - p[0]);
+
+    ctx.save();
+    ctx.translate(p[0], p[1]);
+    ctx.rotate(angle);
+    ctx.beginPath();
+    ctx.moveTo(8, 0);
+    ctx.lineTo(-4, 5);
+    ctx.lineTo(-4, -5);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+  ctx.restore();
+}
+
+function drawTurnNumbers(ctx, pts, st) {
+  // Find corners (direction changes)
+  const turns = detectTurns(pts);
+  ctx.save();
+
+  turns.forEach((idx, num) => {
+    if (idx >= pts.length) return;
+    const p = pts[idx];
+
+    // Circle
+    ctx.beginPath();
+    ctx.arc(p[0], p[1], 10, 0, Math.PI * 2);
+    ctx.fillStyle = st.accent;
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Number
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 8px Orbitron, monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(num + 1, p[0], p[1]);
+  });
+
+  ctx.restore();
+}
+
+function detectTurns(pts) {
+  const turns = [];
+  const minSpacing = Math.floor(pts.length / 20);
+  let lastTurn = -minSpacing;
+
+  for (let i = 2; i < pts.length - 2; i++) {
+    if (i - lastTurn < minSpacing) continue;
+
+    const p0 = pts[i - 2];
+    const p1 = pts[i];
+    const p2 = pts[Math.min(i + 2, pts.length - 1)];
+
+    const a1 = Math.atan2(p1[1] - p0[1], p1[0] - p0[0]);
+    const a2 = Math.atan2(p2[1] - p1[1], p2[0] - p1[0]);
+    let diff = Math.abs(a2 - a1);
+    if (diff > Math.PI) diff = 2 * Math.PI - diff;
+
+    if (diff > 0.25) {
+      turns.push(i);
+      lastTurn = i;
+      if (turns.length >= 20) break;
+    }
+  }
+
+  return turns;
+}
+
+function drawCircuitInfo(ctx, W, H, name, st) {
+  // Circuit name bottom left
+  ctx.save();
+  ctx.font = 'bold 11px Orbitron, monospace';
+  ctx.letterSpacing = '3px';
+  ctx.fillStyle = st.text;
+  ctx.globalAlpha = 0.8;
+  ctx.textAlign = 'left';
+  ctx.fillText(name.toUpperCase(), 20, H - 30);
+
+  ctx.font = '10px Rajdhani, sans-serif';
+  ctx.fillStyle = st.textSub;
+  ctx.globalAlpha = 0.5;
+  ctx.fillText('GENERATED BY F1 TRACK GENERATOR', 20, H - 15);
+
+  // Corner brackets
+  const bSize = 20;
+  ctx.globalAlpha = 0.3;
+  ctx.strokeStyle = st.accent;
+  ctx.lineWidth = 2;
+
+  // TL
+  ctx.beginPath(); ctx.moveTo(10, 10+bSize); ctx.lineTo(10, 10); ctx.lineTo(10+bSize, 10); ctx.stroke();
+  // TR
+  ctx.beginPath(); ctx.moveTo(W-10-bSize, 10); ctx.lineTo(W-10, 10); ctx.lineTo(W-10, 10+bSize); ctx.stroke();
+  // BL
+  ctx.beginPath(); ctx.moveTo(10, H-10-bSize); ctx.lineTo(10, H-10); ctx.lineTo(10+bSize, H-10); ctx.stroke();
+  // BR
+  ctx.beginPath(); ctx.moveTo(W-10-bSize, H-10); ctx.lineTo(W-10, H-10); ctx.lineTo(W-10, H-10-bSize); ctx.stroke();
+
+  ctx.restore();
+}
+
+// ======================================================
+// STATS
+// ======================================================
+function updateStats(points) {
+  let dist = 0;
+  for (let i = 1; i < points.length; i++) {
+    const [lat1, lng1] = points[i - 1];
+    const [lat2, lng2] = points[i];
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLng/2)**2;
+    dist += R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  }
+
+  document.getElementById('statLength').innerHTML = dist.toFixed(2) + '<span> km</span>';
+  document.getElementById('statTurns').textContent = '~' + (10 + Math.floor(points.length / 3));
+  document.getElementById('statPoints').textContent = points.length;
+  document.getElementById('statStyle').textContent = STYLES[currentStyle].name;
+}
+
+// ======================================================
+// EXAMPLE
+// ======================================================
+function loadExample() {
+  // Interlagos-inspired coords
+  const exampleCoords = `
+-23.7036,-46.6997
+-23.7025,-46.6978
+-23.7011,-46.6965
+-23.6998,-46.6972
+-23.6990,-46.6985
+-23.6985,-46.7002
+-23.6990,-46.7018
+-23.7002,-46.7028
+-23.7015,-46.7025
+-23.7025,-46.7012
+-23.7033,-46.7005
+-23.7040,-46.7010
+-23.7045,-46.7022
+-23.7042,-46.7035
+-23.7035,-46.7042
+-23.7025,-46.7038
+-23.7018,-46.7028
+-23.7020,-46.7015
+-23.7028,-46.7008
+-23.7036,-46.6997
+`.trim();
+
+  document.getElementById('routeInput').value = exampleCoords;
+  document.getElementById('circuitName').value = 'AUTODROMO JOSE CARLOS PACE';
+  processRoute();
+}
+
+// ======================================================
+// ZOOM & RESET
+// ======================================================
+function zoomIn() {
+  const slider = document.getElementById('scale');
+  slider.value = Math.min(20, parseInt(slider.value) + 2);
+  updateSlider('scaleVal', (slider.value/10).toFixed(1));
+  if (currentPoints.length > 0) renderTrack();
+}
+
+function zoomOut() {
+  const slider = document.getElementById('scale');
+  slider.value = Math.max(5, parseInt(slider.value) - 2);
+  updateSlider('scaleVal', (slider.value/10).toFixed(1));
+  if (currentPoints.length > 0) renderTrack();
+}
+
+function resetView() {
+  document.getElementById('scale').value = 10;
+  document.getElementById('rotation').value = 0;
+  updateSlider('scaleVal', '1.0');
+  updateSlider('rotateVal', '0°');
+  if (currentPoints.length > 0) renderTrack();
+}
+
+// ======================================================
+// EXPORT
+// ======================================================
+function exportPNG() {
+  if (currentPoints.length === 0) { showToast('Gere um traçado primeiro!', true); return; }
+  const canvas = document.getElementById('trackCanvas');
+  const link = document.createElement('a');
+  const name = document.getElementById('circuitName').value || 'circuito';
+  link.download = name.toLowerCase().replace(/\s+/g, '-') + '-f1.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+  showToast('PNG exportado!');
+}
+
+function exportSVG() {
+  if (currentPoints.length === 0) { showToast('Gere um traçado primeiro!', true); return; }
+
+  const canvas = document.getElementById('trackCanvas');
+  const W = canvas.width;
+  const H = canvas.height;
+  const st = STYLES[currentStyle];
+
+  // Build SVG path from projected points
+  const trackWidth = parseInt(document.getElementById('trackWidth').value);
+  const smoothing = parseInt(document.getElementById('smoothing').value);
+  const scale = parseFloat(document.getElementById('scale').value) / 10;
+  const rotation = parseInt(document.getElementById('rotation').value) * Math.PI / 180;
+  const pts = projectCoords(currentPoints, W, H, scale, rotation, smoothing);
+
+  let d = `M ${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)}`;
+  for (let i = 1; i < pts.length; i++) {
+    d += ` L ${pts[i][0].toFixed(1)} ${pts[i][1].toFixed(1)}`;
+  }
+  d += ' Z';
+
+  const name = document.getElementById('circuitName').value || 'Circuito';
+
+  const svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+  <rect width="${W}" height="${H}" fill="${st.bgGrad[0]}"/>
+  <!-- Track outline -->
+  <path d="${d}" fill="none" stroke="${st.outline}" stroke-width="${trackWidth + 8}" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Asphalt -->
+  <path d="${d}" fill="none" stroke="${st.asphalt}" stroke-width="${trackWidth}" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Center line -->
+  <path d="${d}" fill="none" stroke="${st.trackLine}" stroke-width="1" stroke-dasharray="20,15" opacity="0.3"/>
+  <!-- Accent glow -->
+  <path d="${d}" fill="none" stroke="${st.accent}" stroke-width="2" opacity="0.15"/>
+  <!-- Name -->
+  <text x="20" y="${H - 15}" font-family="monospace" font-size="14" fill="${st.text}" opacity="0.8">${name.toUpperCase()}</text>
+</svg>`;
+
+  const blob = new Blob([svg], {type: 'image/svg+xml'});
+  const link = document.createElement('a');
+  link.download = name.toLowerCase().replace(/\s+/g, '-') + '-f1.svg';
+  link.href = URL.createObjectURL(blob);
+  link.click();
+  showToast('SVG exportado!');
+}
+
+function copyImage() {
+  if (currentPoints.length === 0) { showToast('Gere um traçado primeiro!', true); return; }
+  const canvas = document.getElementById('trackCanvas');
+  canvas.toBlob(blob => {
+    const item = new ClipboardItem({'image/png': blob});
+    navigator.clipboard.write([item]).then(() => {
+      showToast('Imagem copiada!');
+    }).catch(() => {
+      showToast('Copie manualmente (botão direito)', true);
+    });
+  });
+}
+
+// ======================================================
+// UI HELPERS
+// ======================================================
+function showLoading(show) {
+  document.getElementById('loadingOverlay').classList.toggle('active', show);
+}
+
+function showToast(msg, isError = false) {
+  const toast = document.getElementById('toast');
+  const icon = document.getElementById('toastIcon');
+  const msgEl = document.getElementById('toastMsg');
+
+  toast.className = 'toast' + (isError ? ' error' : '');
+  icon.textContent = isError ? '✕' : '✓';
+  msgEl.textContent = msg;
+  toast.classList.add('show');
+
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+// Input also triggers name update
+document.getElementById('circuitName').addEventListener('input', () => {
+  document.getElementById('displayName').textContent =
+    document.getElementById('circuitName').value || '---';
+  if (currentPoints.length > 0) renderTrack();
+});
+
+// Allow Enter on input
+document.getElementById('routeInput').addEventListener('keydown', e => {
+  if (e.ctrlKey && e.key === 'Enter') processRoute();
+});
+</script>
+</body>
+</html>
